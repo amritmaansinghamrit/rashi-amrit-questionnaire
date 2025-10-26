@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rashi's Answers 💕</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+            color: #2c3e50;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #e74c3c;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+
+        .section {
+            margin: 50px 0;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #e74c3c;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .answer {
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(to right, rgba(231, 76, 60, 0.05), rgba(231, 76, 60, 0.02));
+            border-radius: 15px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .question {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .response {
+            color: #34495e;
+            font-size: 1.05em;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .image-response {
+            max-width: 100%;
+            border-radius: 15px;
+            margin-top: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-swatch {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            margin-right: 15px;
+            vertical-align: middle;
+            border: 3px solid #bdc3c7;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .emoji-response {
+            font-size: 4em;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 3px solid #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px;
+            font-size: 1.5em;
+            color: #7f8c8d;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading" id="loading">Loading Rashi's beautiful answers...</div>
+        <div id="content" style="display: none;"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="js/config.js"></script>
+    <script>
+        // Get response ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const responseId = urlParams.get('id');
+
+        // Question texts for reference
+        const questionTexts = {
+            q1: "The cute name you're giving me",
+            q2: "When you're pretend-annoyed with me, what will you call me?",
+            q3: "Describe me in one word to your Kodai friends",
+            q4: "The emoji that's \"Amrit's emoji\"",
+            // Add all 118 question texts...
+            // (truncated for brevity - would include all questions)
+        };
+
+        async function loadResponses() {
+            try {
+                let formData;
+
+                if (responseId && typeof firebase !== 'undefined' && firebaseConfig) {
+                    // Load from Firebase
+                    firebase.initializeApp(firebaseConfig);
+                    const database = firebase.database();
+                    const snapshot = await database.ref(`responses/${responseId}`).once('value');
+                    const data = snapshot.val();
+                    formData = data.data;
+                } else {
+                    // Load from localStorage
+                    const saved = localStorage.getItem('rashiAmritResponses');
+                    formData = saved ? JSON.parse(saved) : {};
+                }
+
+                renderResponses(formData);
+            } catch (error) {
+                console.error('Error loading responses:', error);
+                document.getElementById('loading').textContent = 'Error loading responses. Please contact Amrit.';
+            }
+        }
+
+        function renderResponses(formData) {
+            const timestamp = new Date().toLocaleString();
+            let html = `
+                <div class="header">
+                    <h1>For My Amrit 💕</h1>
+                    <p>Rashi's Heart, Captured in 118 Answers</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #95a5a6;">
+                        Completed on ${timestamp}
+                    </p>
+                </div>
+            `;
+
+            // Render all responses grouped by section
+            // For now, render all questions
+            for (let i = 1; i <= 118; i++) {
+                const qId = `q${i}`;
+                const value = formData[qId];
+
+                if (value) {
+                    const questionText = questionTexts[qId] || `Question ${i}`;
+                    html += `
+                        <div class="answer">
+                            <div class="question">${i}. ${questionText}</div>
+                            <div class="response">${renderValue(value)}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                <div class="footer">
+                    <p>❤️ Our Story, Our Love, Forever Preserved ❤️</p>
+                    <p style="margin-top: 15px;">RashRit - From June 15 to Infinity</p>
+                </div>
+            `;
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').innerHTML = html;
+            document.getElementById('content').style.display = 'block';
+        }
+
+        function renderValue(value) {
+            if (typeof value === 'string') {
+                // Check if it's an image
+                if (value.startsWith('data:image')) {
+                    return `<img src="${value}" class="image-response" alt="Response">`;
+                }
+                // Check if it's audio
+                if (value.startsWith('data:audio')) {
+                    return `<audio controls src="${value}"></audio>`;
+                }
+                // Check if it's a color
+                if (value.startsWith('#')) {
+                    return `<span class="color-swatch" style="background-color: ${value}"></span> ${value}`;
+                }
+                // Regular text
+                return value;
+            } else if (Array.isArray(value)) {
+                return `<ul>${value.map(v => `<li>${v}</li>`).join('')}</ul>`;
+            } else if (typeof value === 'object') {
+                // Color palette
+                return Object.values(value).map(color =>
+                    `<span class="color-swatch" style="background-color: ${color}"></span>`
+                ).join('');
+            }
+            return value;
+        }
+
+        // Load on page load
+        loadResponses();
+    </script>
+</body>
+</html>
