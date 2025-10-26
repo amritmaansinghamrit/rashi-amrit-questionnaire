@@ -79,16 +79,6 @@ function loadPhotoSlideshow() {
 
     changePhoto();
     setInterval(changePhoto, 6000);
-
-    // Header photo cycling
-    let headerIndex = 0;
-    setInterval(() => {
-        headerIndex = (headerIndex + 1) % allPhotos.length;
-        const headerPhoto = document.getElementById('headerPhoto');
-        if (headerPhoto) {
-            headerPhoto.src = `images/${allPhotos[headerIndex]}`;
-        }
-    }, 4000);
 }
 
 // Render current question
@@ -636,14 +626,12 @@ function updateProgress() {
     const displayNumber = currentQuestionIndex + 1;
 
     document.getElementById('progressBar').style.width = `${progress}%`;
-    document.getElementById('sectionProgress').textContent = `Question ${displayNumber} of ${totalQuestions}`;
 
     const currentQ = activeQuestions[currentQuestionIndex];
     if (currentQ) {
-        document.getElementById('sectionName').textContent = `Question ${displayNumber}`;
+        document.getElementById('sectionProgress').textContent = `Question ${displayNumber} of ${totalQuestions}`;
     } else {
-        document.getElementById('sectionName').textContent = 'Complete!';
-        document.getElementById('sectionProgress').textContent = 'All done!';
+        document.getElementById('sectionProgress').textContent = 'Complete! 💕';
     }
 }
 
