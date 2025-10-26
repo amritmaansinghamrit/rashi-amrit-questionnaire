@@ -142,20 +142,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="js/config.js"></script>
+    <script src="js/questions-config-updated.js"></script>
     <script>
         // Get response ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const responseId = urlParams.get('id');
-
-        // Question texts for reference
-        const questionTexts = {
-            q1: "The cute name you're giving me",
-            q2: "When you're pretend-annoyed with me, what will you call me?",
-            q3: "Describe me in one word to your Kodai friends",
-            q4: "The emoji that's \"Amrit's emoji\"",
-            // Add all 118 question texts...
-            // (truncated for brevity - would include all questions)
-        };
 
         async function loadResponses() {
             try {
@@ -183,32 +174,32 @@
 
         function renderResponses(formData) {
             const timestamp = new Date().toLocaleString();
+            const enabledQuestions = questionConfig.filter(q => q.enabled);
+
             let html = `
                 <div class="header">
                     <h1>For My Amrit 💕</h1>
-                    <p>Rashi's Heart, Captured in 118 Answers</p>
+                    <p>Rashi's Heart, Captured in ${enabledQuestions.length} Answers</p>
                     <p style="margin-top: 10px; font-size: 0.9em; color: #95a5a6;">
                         Completed on ${timestamp}
                     </p>
                 </div>
             `;
 
-            // Render all responses grouped by section
-            // For now, render all questions
-            for (let i = 1; i <= 118; i++) {
-                const qId = `q${i}`;
+            // Render only enabled questions in order
+            enabledQuestions.forEach(question => {
+                const qId = `q${question.id}`;
                 const value = formData[qId];
 
                 if (value) {
-                    const questionText = questionTexts[qId] || `Question ${i}`;
                     html += `
                         <div class="answer">
-                            <div class="question">${i}. ${questionText}</div>
+                            <div class="question">${question.id}. ${question.text}</div>
                             <div class="response">${renderValue(value)}</div>
                         </div>
                     `;
                 }
-            }
+            });
 
             html += `
                 <div class="footer">

@@ -38,6 +38,14 @@ let database, storage;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if responses are locked
+    const isLocked = localStorage.getItem('rashiAmritLocked');
+    if (isLocked === 'true') {
+        // Redirect to output page
+        window.location.href = 'output.html';
+        return;
+    }
+
     initializeFirebase();
     activeQuestions = getEnabledQuestions();
     loadFromLocalStorage();
@@ -105,15 +113,31 @@ function renderCurrentQuestion() {
     }
 
     const qId = `q${question.id}`;
+
+    // Get photos for this question
+    const photos = questionPhotos[question.id] || [];
+
+    // Handle Q19 dynamic text - use Q18 answer
+    let questionText = question.text;
+    let questionNote = question.note;
+    if (question.id === 19 && formData['q18']) {
+        questionNote = `Draw a symbol for "${formData['q18']}"`;
+    }
+
     const html = `
         <div class="question" style="animation: fadeIn 0.5s ease;">
             <label class="question-label">
                 <span class="question-number">${question.id}.</span>
-                ${question.text}
-                ${question.note ? `<div class="question-note">${question.note}</div>` : ''}
+                ${questionText}
+                ${questionNote ? `<div class="question-note">${questionNote}</div>` : ''}
             </label>
             ${renderQuestionInput(question, qId)}
         </div>
+        ${photos.length > 0 ? `
+            <div class="question-photos">
+                ${photos.map(photo => `<img src="images/${photo}" alt="Memory">`).join('')}
+            </div>
+        ` : ''}
     `;
 
     container.innerHTML = html;
@@ -213,6 +237,14 @@ function renderQuestionInput(q, qId) {
                 </div>
                 <div class="canvas-controls">
                     <button class="btn-canvas" data-canvas="${qId}">Clear</button>
+                    <div class="canvas-color-picker">
+                        <label>Color:</label>
+                        <input type="color" id="${qId}-color" value="#e74c3c">
+                    </div>
+                    <div class="canvas-brush-size">
+                        <label>Brush:</label>
+                        <input type="range" id="${qId}-brush" min="1" max="20" value="2">
+                    </div>
                 </div>
             `;
 
@@ -223,6 +255,14 @@ function renderQuestionInput(q, qId) {
                 </div>
                 <div class="canvas-controls">
                     <button class="btn-canvas" data-canvas="${qId}">Clear</button>
+                    <div class="canvas-color-picker">
+                        <label>Color:</label>
+                        <input type="color" id="${qId}-color" value="#e74c3c">
+                    </div>
+                    <div class="canvas-brush-size">
+                        <label>Brush:</label>
+                        <input type="range" id="${qId}-brush" min="1" max="20" value="2">
+                    </div>
                 </div>
             `;
 
@@ -420,6 +460,22 @@ function initializeCanvas(qId) {
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
 
+    // Connect color picker
+    const colorPicker = document.getElementById(`${qId}-color`);
+    if (colorPicker) {
+        colorPicker.addEventListener('change', (e) => {
+            ctx.strokeStyle = e.target.value;
+        });
+    }
+
+    // Connect brush size
+    const brushSize = document.getElementById(`${qId}-brush`);
+    if (brushSize) {
+        brushSize.addEventListener('input', (e) => {
+            ctx.lineWidth = e.target.value;
+        });
+    }
+
     let isDrawing = false;
     let lastX = 0;
     let lastY = 0;
@@ -611,7 +667,7 @@ function showSaveIndicator() {
 
 // Submit form
 async function submitForm() {
-    if (!confirm('Are you ready to save all your answers forever?')) {
+    if (!confirm('Are you ready to save all your answers forever? Once saved, they cannot be edited.')) {
         return;
     }
 
@@ -621,23 +677,29 @@ async function submitForm() {
 
     try {
         const timestamp = Date.now();
+        const completionDate = new Date().toISOString();
         const responseId = `response_${timestamp}`;
+
+        // Lock the responses locally
+        localStorage.setItem('rashiAmritLocked', 'true');
+        localStorage.setItem('rashiAmritCompletionDate', completionDate);
 
         if (database) {
             await database.ref(`responses/${responseId}`).set({
                 timestamp: timestamp,
-                date: new Date().toISOString(),
+                date: completionDate,
                 questionCount: activeQuestions.length,
                 data: formData
             });
             window.location.href = `output.html?id=${responseId}`;
         } else {
-            downloadResponses();
+            // Even without Firebase, lock locally and show output
+            window.location.href = 'output.html';
         }
     } catch (error) {
         console.error('Error saving:', error);
-        alert('There was an error saving. Downloading backup...');
-        downloadResponses();
+        alert('There was an error saving. Your responses are still saved locally and locked.');
+        window.location.href = 'output.html';
     }
 }
 
