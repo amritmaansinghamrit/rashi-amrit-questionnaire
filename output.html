@@ -173,8 +173,11 @@
         }
 
         function renderResponses(formData) {
+            window.formDataGlobal = formData; // Store globally for download
+            window.enabledQuestionsGlobal = questionConfig.filter(q => q.enabled);
+
             const timestamp = new Date().toLocaleString();
-            const enabledQuestions = questionConfig.filter(q => q.enabled);
+            const enabledQuestions = window.enabledQuestionsGlobal;
 
             let html = `
                 <div class="header">
@@ -183,6 +186,14 @@
                     <p style="margin-top: 10px; font-size: 0.9em; color: #95a5a6;">
                         Completed on ${timestamp}
                     </p>
+                    <div style="margin-top: 20px;">
+                        <button onclick="downloadCompleteHTML()" style="padding: 12px 30px; background: linear-gradient(135deg, #ff6b9d, #ffd93d); color: white; border: none; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 179, 217, 0.3); font-family: 'Quicksand', sans-serif;">
+                            📥 Download Complete Copy (HTML)
+                        </button>
+                        <button onclick="downloadJSON()" style="padding: 12px 30px; background: rgba(255, 255, 255, 0.9); color: #ff6b9d; border: 2px solid #ffb3d9; border-radius: 25px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-left: 10px; font-family: 'Quicksand', sans-serif;">
+                            💾 Download Data (JSON Backup)
+                        </button>
+                    </div>
                 </div>
             `;
 
@@ -239,6 +250,179 @@
                 ).join('');
             }
             return value;
+        }
+
+        // Download complete HTML with all responses embedded
+        function downloadCompleteHTML() {
+            const timestamp = new Date().toLocaleString();
+            const formData = window.formDataGlobal;
+            const enabledQuestions = window.enabledQuestionsGlobal;
+
+            let responsesHTML = '';
+            enabledQuestions.forEach((question, index) => {
+                const qId = `q${question.id}`;
+                const value = formData[qId];
+                const displayNumber = index + 1;
+
+                if (value) {
+                    let responseContent = '';
+                    if (typeof value === 'string') {
+                        if (value.startsWith('data:image')) {
+                            responseContent = `<img src="${value}" style="max-width: 100%; border-radius: 15px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" alt="Response">`;
+                        } else if (value.startsWith('data:audio')) {
+                            responseContent = `<audio controls style="width: 100%; margin-top: 10px;"><source src="${value}"></audio>`;
+                        } else if (value.startsWith('#')) {
+                            responseContent = `<div style="display: inline-block; width: 60px; height: 60px; background-color: ${value}; border-radius: 12px; border: 3px solid #ddd; box-shadow: 0 3px 10px rgba(0,0,0,0.2); margin-right: 10px; vertical-align: middle;"></div><span style="font-weight: 600; color: #555;">${value}</span>`;
+                        } else {
+                            responseContent = value.replace(/\n/g, '<br>');
+                        }
+                    } else if (Array.isArray(value)) {
+                        responseContent = '<ul style="margin-left: 20px;">' + value.map(v => `<li>${v}</li>`).join('') + '</ul>';
+                    } else if (typeof value === 'object') {
+                        responseContent = Object.values(value).map(color =>
+                            `<div style="display: inline-block; width: 50px; height: 50px; background-color: ${color}; border-radius: 10px; margin: 5px; border: 2px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"></div>`
+                        ).join('');
+                    } else {
+                        responseContent = value;
+                    }
+
+                    responsesHTML += `
+                        <div style="margin: 40px 0; padding: 30px; background: linear-gradient(to right, rgba(255, 249, 230, 0.5), rgba(255, 230, 242, 0.5)); border-radius: 20px; border-left: 5px solid #ffd93d; box-shadow: 0 4px 15px rgba(255, 179, 217, 0.15);">
+                            <div style="font-weight: 700; color: #ff6b9d; margin-bottom: 15px; font-size: 1.15rem;">${displayNumber}. ${question.text}</div>
+                            <div style="color: #34495e; font-size: 1.05rem; line-height: 1.8;">${responseContent}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            const completeHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rashi & Amrit - Our Story 💕</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe6f2 100%);
+            color: #2c3e50;
+            padding: 40px 20px;
+            line-height: 1.7;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(255, 179, 217, 0.3);
+            border: 3px solid rgba(255, 217, 61, 0.3);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 3px solid rgba(255, 217, 61, 0.5);
+        }
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ffa500 50%, #ffd93d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        .header p {
+            color: #ff6b9d;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        .timestamp {
+            margin-top: 20px;
+            font-size: 1rem;
+            color: #95a5a6;
+            font-weight: 500;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            padding-top: 50px;
+            border-top: 3px solid rgba(255, 217, 61, 0.5);
+            color: #ff6b9d;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .footer p { margin: 15px 0; }
+        @media print {
+            body { background: white; padding: 20px; }
+            .container { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>For My Amrit 💕</h1>
+            <p>Rashi's Heart, Captured in ${enabledQuestions.length} Beautiful Answers</p>
+            <p class="timestamp">Completed on ${timestamp}</p>
+        </div>
+
+        ${responsesHTML}
+
+        <div class="footer">
+            <p>❤️ Our Story, Our Love, Forever Preserved ❤️</p>
+            <p style="margin-top: 20px; font-size: 1.1rem;">RashRit - From June 15 to Infinity</p>
+            <p style="margin-top: 30px; font-size: 0.9rem; color: #95a5a6;">
+                This file is permanent and can be opened anytime in any web browser.<br>
+                Keep it safe - it contains all of Rashi's precious responses! 💝
+            </p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([completeHTML], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rashi_Amrit_Story_${Date.now()}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('✅ Complete HTML file downloaded!\n\nThis file contains ALL responses (text, images, audio) and can be opened in any browser forever. Keep it safe! 💕');
+        }
+
+        // Download JSON backup
+        function downloadJSON() {
+            const formData = window.formDataGlobal;
+            const dataToSave = {
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleString(),
+                questionCount: window.enabledQuestionsGlobal.length,
+                responses: formData
+            };
+
+            const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rashi_Amrit_Backup_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('✅ JSON backup downloaded!\n\nThis is a technical backup file containing all data in JSON format. Keep it safe! 💾');
         }
 
         // Load on page load
