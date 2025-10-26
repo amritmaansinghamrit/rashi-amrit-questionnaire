@@ -187,14 +187,15 @@
             `;
 
             // Render only enabled questions in order
-            enabledQuestions.forEach(question => {
+            enabledQuestions.forEach((question, index) => {
                 const qId = `q${question.id}`;
                 const value = formData[qId];
+                const displayNumber = index + 1; // Sequential number
 
                 if (value) {
                     html += `
                         <div class="answer">
-                            <div class="question">${question.id}. ${question.text}</div>
+                            <div class="question">${displayNumber}. ${question.text}</div>
                             <div class="response">${renderValue(value)}</div>
                         </div>
                     `;

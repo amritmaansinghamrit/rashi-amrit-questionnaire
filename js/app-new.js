@@ -113,6 +113,7 @@ function renderCurrentQuestion() {
     }
 
     const qId = `q${question.id}`;
+    const displayNumber = currentQuestionIndex + 1; // Sequential number for display
 
     // Get photos for this question
     const photos = questionPhotos[question.id] || [];
@@ -127,7 +128,7 @@ function renderCurrentQuestion() {
     const html = `
         <div class="question" style="animation: fadeIn 0.5s ease;">
             <label class="question-label">
-                <span class="question-number">${question.id}.</span>
+                <span class="question-number">${displayNumber}.</span>
                 ${questionText}
                 ${questionNote ? `<div class="question-note">${questionNote}</div>` : ''}
             </label>
@@ -632,12 +633,14 @@ function updateNavigation() {
 function updateProgress() {
     const totalQuestions = activeQuestions.length;
     const progress = (currentQuestionIndex / totalQuestions) * 100;
+    const displayNumber = currentQuestionIndex + 1;
+
     document.getElementById('progressBar').style.width = `${progress}%`;
-    document.getElementById('sectionProgress').textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+    document.getElementById('sectionProgress').textContent = `Question ${displayNumber} of ${totalQuestions}`;
 
     const currentQ = activeQuestions[currentQuestionIndex];
     if (currentQ) {
-        document.getElementById('sectionName').textContent = `Question ${currentQ.id}`;
+        document.getElementById('sectionName').textContent = `Question ${displayNumber}`;
     } else {
         document.getElementById('sectionName').textContent = 'Complete!';
         document.getElementById('sectionProgress').textContent = 'All done!';
