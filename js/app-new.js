@@ -6,7 +6,7 @@ let mediaRecorder = null;
 let audioChunks = [];
 const canvasContexts = {};
 
-// Shuffled photo list for better distribution
+// All available photos for background and sidebar
 const allPhotos = [
     '765AE223-5DAE-43F5-89C8-8F532970C274_1_105_c.jpeg',
     'A6966838-1D03-4785-8043-B662AFD23CF9_1_105_c.jpeg',
@@ -32,6 +32,32 @@ const allPhotos = [
     '4F124CA2-8C1E-4B37-B3AD-78A6969D408B_1_105_c.jpeg',
     '9B1C08CE-BAA7-43D2-B6C9-6CEAE47B8835_1_105_c.jpeg'
 ];
+
+// Track used photos to prevent repetition
+let usedPhotos = [];
+
+// Get random photos without repetition
+function getRandomPhotos(count) {
+    const available = allPhotos.filter(p => !usedPhotos.includes(p));
+
+    // If we've used most photos, reset the pool
+    if (available.length < count) {
+        usedPhotos = [];
+        return getRandomPhotos(count);
+    }
+
+    const selected = [];
+    const availableCopy = [...available];
+
+    for (let i = 0; i < count; i++) {
+        const randomIndex = Math.floor(Math.random() * availableCopy.length);
+        const photo = availableCopy.splice(randomIndex, 1)[0];
+        selected.push(photo);
+        usedPhotos.push(photo);
+    }
+
+    return selected;
+}
 
 // Initialize Firebase
 let database, storage;
@@ -105,8 +131,9 @@ function renderCurrentQuestion() {
     const qId = `q${question.id}`;
     const displayNumber = currentQuestionIndex + 1; // Sequential number for display
 
-    // Get photos for this question
-    const photos = questionPhotos[question.id] || [];
+    // Get random photos for this question (1-2 photos)
+    const photoCount = Math.random() > 0.5 ? 2 : 1;
+    const photos = getRandomPhotos(photoCount);
 
     // Handle Q19 dynamic text - use Q18 answer
     let questionText = question.text;
