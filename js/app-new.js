@@ -116,19 +116,21 @@ function renderCurrentQuestion() {
     }
 
     const html = `
-        <div class="question" style="animation: fadeIn 0.5s ease;">
-            <label class="question-label">
-                <span class="question-number">${displayNumber}.</span>
-                ${questionText}
-                ${questionNote ? `<div class="question-note">${questionNote}</div>` : ''}
-            </label>
-            ${renderQuestionInput(question, qId)}
-        </div>
-        ${photos.length > 0 ? `
-            <div class="question-photos">
-                ${photos.map(photo => `<img src="images/${photo}" alt="Memory" loading="lazy">`).join('')}
+        <div class="question-container">
+            <div class="question" style="animation: fadeIn 0.5s ease;">
+                <label class="question-label">
+                    <span class="question-number">${displayNumber}.</span>
+                    ${questionText}
+                    ${questionNote ? `<div class="question-note">${questionNote}</div>` : ''}
+                </label>
+                ${renderQuestionInput(question, qId)}
             </div>
-        ` : ''}
+            ${photos.length > 0 ? `
+                <div class="question-photos">
+                    ${photos.map(photo => `<img src="images/${photo}" alt="Memory" loading="lazy">`).join('')}
+                </div>
+            ` : ''}
+        </div>
     `;
 
     container.innerHTML = html;
